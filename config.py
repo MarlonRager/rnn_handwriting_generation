@@ -29,6 +29,7 @@ parser.add_argument('--b', type=float, default=3.0,
                     help='biased sampling')
 parser.add_argument('--action', type=str, default='train',
                     help='mode')
+parser.add_argument('--restore', dest='restore', default=None, type=str)
 # parser.add_argument('--decay_rate', type=float, default=0.95,
 #                      help='decay rate for rmsprop')
 # parser.add_argument('--keep_prob', type=float, default=0.8,
