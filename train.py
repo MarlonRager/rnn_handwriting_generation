@@ -1,10 +1,11 @@
 import tensorflow as tf
-import numpy as np
 import model as m
 from config import *
 import time
 
-from utils import DataLoader, draw_strokes_random_color
+from utils import DataLoader
+
+restore_model = args.restore
 
 data_loader = DataLoader(args.batch_size, args.T, args.data_scale,
                          chars=args.chars, points_per_char=args.points_per_char)
@@ -13,6 +14,12 @@ args.U = data_loader.max_U
 args.c_dimension = len(data_loader.chars) + 1
 
 model = m.Model()
+if restore_model:
+    try:
+        model.load_weights(args.restore)
+    except():
+        print("Couldn't find checkpoint-file. Continuing with empty model")
+
 optimizer = tf.keras.optimizers.Adam(learning_rate=args.learning_rate)
 loss_fn = m.compute_custom_loss
 for e in range(args.num_epochs):
@@ -30,7 +37,7 @@ for e in range(args.num_epochs):
         grads = tape.gradient(loss_value, model.trainable_weights)
         optimizer.apply_gradients(zip(grads, model.trainable_weights))
         if b % 100 == 0:
-            print('batches %d, loss %g' % (b, loss_value))
-            print("Time elpased {} s".format(str(round(time.time() - tic, 2))))
+            print('batches %d/%d, loss %g -- time: %s' % (b, data_loader.num_batches, loss_value,
+                                                          str(round(time.time() - tic, 2))))
 
-    model.save_weights('lstm_validator/checkpoint')
+    model.save_weights('lstm_validator_%d/checkpoint' % e)
