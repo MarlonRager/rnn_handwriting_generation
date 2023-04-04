@@ -2,7 +2,7 @@ import tensorflow as tf
 import model as m
 from config import *
 import time
-
+import os
 from utils import DataLoader
 
 restore_model = args.restore
