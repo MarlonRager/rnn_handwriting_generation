@@ -14,16 +14,22 @@ args.U = data_loader.max_U
 args.c_dimension = len(data_loader.chars) + 1
 
 model = m.Model()
-if restore_model:
-    try:
-        model.load_weights(args.restore)
-    except():
-        print("Couldn't find checkpoint-file. Continuing with empty model")
 
+# init model
 optimizer = tf.keras.optimizers.Adam(learning_rate=args.learning_rate)
 loss_fn = m.compute_custom_loss
+
+# define checkpoints and restore model and optimizer from
+checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
+manager = tf.train.CheckpointManager(
+    checkpoint, 
+    directory="training_checkpoints/chkpt",
+    max_to_keep=5
+)
+status = checkpoint.restore(manager.latest_checkpoint)
+
 for e in range(args.num_epochs):
-    print("epoch %d" % e)
+    print("epoch %d of %d" % (e, args.num_epochs))
     data_loader.reset_batch_pointer()
     for b in range(data_loader.num_batches):
         tic = time.time()
@@ -36,8 +42,13 @@ for e in range(args.num_epochs):
 
         grads = tape.gradient(loss_value, model.trainable_weights)
         optimizer.apply_gradients(zip(grads, model.trainable_weights))
-        if b % 100 == 0:
-            print('batches %d/%d, loss %g -- time: %s' % (b, data_loader.num_batches, loss_value,
-                                                          str(round(time.time() - tic, 2))))
 
-    model.save_weights('lstm_validator_%d/checkpoint' % e)
+        if b % 1 == 0:
+            print('batches %d/%s, loss %g -- time: %s' % (b+1, data_loader.num_batches, loss_value, str(round(time.time() - tic, 2))))
+        
+        if (time.time() - tic) > 240:
+            print("takes too long")
+            os.Exit()
+
+    manager.save()
+
