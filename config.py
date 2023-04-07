@@ -30,6 +30,11 @@ parser.add_argument('--b', type=float, default=3.0,
 parser.add_argument('--action', type=str, default='train',
                     help='mode')
 parser.add_argument('--restore', dest='restore', default=None, type=str)
+parser.add_argument('--epoch', dest='epoch_ctr', default=0, type=int)
+parser.add_argument('--folder', dest='tgtdir', default="/tmp/handwriting", type=str)
+
+
+
 # parser.add_argument('--decay_rate', type=float, default=0.95,
 #                      help='decay rate for rmsprop')
 # parser.add_argument('--keep_prob', type=float, default=0.8,

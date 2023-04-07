@@ -9,7 +9,7 @@ def expand(x, dim, N):
 data_loader = DataLoader(args.batch_size, args.T, args.data_scale,
                          chars=args.chars, points_per_char=args.points_per_char)
 str = 'a quick brown fox jumps over the lazy dog'
-
+str = f"So gut schreibe ich nach {args.epoch_ctr} Lernzyklen"
 args.U = len(str)
 args.c_dimension = len(data_loader.chars) + 1
 args.T = 1
@@ -85,7 +85,14 @@ class SynthesisNet(tf.keras.Model):
                 self_rnn_2_h, self_rnn_2_c, self_w, self_phi, self_kappa)
 
 model = SynthesisNet()
-model.load_weights('lstm_validator/checkpoint')
+# define checkpoints and restore model and optimizer from
+checkpoint = tf.train.Checkpoint(model=model)
+manager = tf.train.CheckpointManager(
+    checkpoint, 
+    directory=f"{args.tgtdir}",
+    max_to_keep=5
+)
+status = checkpoint.restore(manager.latest_checkpoint)
 
 
 def sample(length, input_str=None):
@@ -156,4 +163,4 @@ def sample(length, input_str=None):
 
 str_vec = vectorization(str, data_loader.char_to_indices)
 strokes = sample(len(str) * args.points_per_char, input_str=str_vec)
-draw_strokes_random_color(strokes, factor=0.1, svg_filename='sample' + '.normal.svg')
+draw_strokes_random_color(strokes, factor=0.1, svg_filename=f"{args.tgtdir}/sample_epoch_{args.epoch_ctr}.svg")

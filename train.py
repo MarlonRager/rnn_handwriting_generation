@@ -4,6 +4,7 @@ from config import *
 import time
 import os
 from utils import DataLoader
+import datetime
 
 restore_model = args.restore
 
@@ -23,10 +24,11 @@ loss_fn = m.compute_custom_loss
 checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
 manager = tf.train.CheckpointManager(
     checkpoint, 
-    directory="training_checkpoints/chkpt",
-    max_to_keep=5
+    directory=f"{args.tgtdir}",
+    max_to_keep=1000
 )
 status = checkpoint.restore(manager.latest_checkpoint)
+
 
 for e in range(args.num_epochs):
     print("epoch %d of %d" % (e, args.num_epochs))
@@ -51,4 +53,8 @@ for e in range(args.num_epochs):
             os.Exit()
 
     manager.save()
+    with open(f"{args.tgtdir}/loss.txt", "a") as myfile:
+        myfile.write(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()},{e},{loss_value}\n")
+    
+    os.system(f'python3 sample.py --epoch {e} --folder {args.tgtdir}')
 
