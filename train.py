@@ -29,23 +29,24 @@ manager = tf.train.CheckpointManager(
 )
 status = checkpoint.restore(manager.latest_checkpoint)
 
-data_loader.reset_batch_pointer()
-for b in range(data_loader.num_batches):
-    tic = time.time()
-    with tf.GradientTape() as tape:
+for epoch in range(200):
+    data_loader.reset_batch_pointer()
+    for b in range(data_loader.num_batches):
+        tic = time.time()
+        with tf.GradientTape() as tape:
 
-        x, y, c_vec, c = data_loader.next_batch()
-        out = model([x, c_vec])
-        loss_value = loss_fn(y, out)
+            x, y, c_vec, c = data_loader.next_batch()
+            out = model([x, c_vec])
+            loss_value = loss_fn(y, out)
 
-    grads = tape.gradient(loss_value, model.trainable_weights)
-    optimizer.apply_gradients(zip(grads, model.trainable_weights))
+        grads = tape.gradient(loss_value, model.trainable_weights)
+        optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
-    if b % 1 == 0:
-        print(f"epoch: {args.epoch_ctr} - batch: {b+1}/{data_loader.num_batches} - loss: {loss_value} - time: {str(round(time.time() - tic, 2))}")
-        line = f"{datetime.datetime.now(datetime.timezone.utc).isoformat()},{args.epoch_ctr},{b+1}/{data_loader.num_batches},{loss_value},{str(round(time.time() - tic, 2))}\n"
-        with open(f"{args.tgtdir}/loss.txt", "a") as myfile:
-            myfile.write(line)
+        if b % 1 == 0:
+            print(f"epoch: {epoch} - batch: {b+1}/{data_loader.num_batches} - loss: {loss_value} - time: {str(round(time.time() - tic, 2))}")
+            line = f"{datetime.datetime.now(datetime.timezone.utc).isoformat()},{epoch},{b+1}/{data_loader.num_batches},{loss_value},{str(round(time.time() - tic, 2))}\n"
+            with open(f"{args.tgtdir}/loss.txt", "a") as myfile:
+                myfile.write(line)
 
-manager.save()
+    manager.save()
 
